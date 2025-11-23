@@ -1,6 +1,8 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
+#define CHAR_ASPECT 0.5f
+
 cv::Mat convertToGrayscale(const cv::Mat &input) {
     cv::Mat final;
 
@@ -76,14 +78,16 @@ float computeAverageBrightness(const cv::Mat &input, int startWidth, int startHe
 }
 
 int main() {
-    std::string inputFile = "/home/mihai/CLionProjects/MAP-ascii-from-image/input/maxresdefault.jpg";
+    std::string inputFile = "/home/mihai/CLionProjects/MAP-ascii-from-image/input/test.jpg";
     std::string outputFile = "/home/mihai/CLionProjects/MAP-ascii-from-image/output/output.png";
     cv::Mat inputImage = cv::imread(inputFile, cv::IMREAD_UNCHANGED); // keeps alpha
     cv::Mat editedImage;
 
     // consts atm, will be able to be edited with command line args
-    float ratio = inputImage.cols / inputImage.rows;
-    int width = 150, height = width * 0.25;
+    float aspect = 1.0 * inputImage.rows / inputImage.cols;
+    // makes sure the user defined width isnt higher than the actual width
+    int width = std::min(150, inputImage.cols);
+    int height = width * aspect * CHAR_ASPECT;
     std::string charset = "@%#W$8B&M0QDRNHXAqmzpdbkhao*+=;:,.  ";
 
     if (inputImage.empty()) {
@@ -94,16 +98,15 @@ int main() {
     // TODO: add switches here for image filters
     editedImage = inputImage;
 
-    int stepX = (editedImage.cols) / width;
-    int stepY = (editedImage.rows) / height;
+    // iterates through the user defined width (and height which is calculated above)
     for (int row = 0; row < height; row++) {
         for (int col = 0; col < width; col++) {
 
             int startX = (col * editedImage.cols) / width;
-            int endX   = ((col + 1) * editedImage.cols) / width;
+            int endX = ((col + 1) * editedImage.cols) / width;
 
             int startY = (row * editedImage.rows) / height;
-            int endY   = ((row + 1) * editedImage.rows) / height;
+            int endY = ((row + 1) * editedImage.rows) / height;
 
             float avg = computeAverageBrightness(editedImage, startX, startY, endX - startX, endY - startY);
 
