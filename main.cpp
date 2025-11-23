@@ -1,6 +1,5 @@
-#include <opencv2/opencv.hpp>
 #include <iostream>
-#include <cxxopts.hpp>
+#include <opencv2/opencv.hpp>
 
 cv::Mat convertToGrayscale(const cv::Mat &input) {
     cv::Mat final;
@@ -27,7 +26,7 @@ cv::Mat convertToGrayscale(const cv::Mat &input) {
     return final;
 }
 
-cv::Mat resizeImage(cv::Mat &input, double factor) {
+cv::Mat resizeImage(cv::Mat &input, float factor) {
     cv::Mat resized;
 
     cv::resize(input, resized, cv::Size(), factor, factor, cv::INTER_AREA);
@@ -35,42 +34,84 @@ cv::Mat resizeImage(cv::Mat &input, double factor) {
     return resized;
 }
 
+float computeAverageBrightness(const cv::Mat &input, int startWidth, int startHeight, int width, int height) {
+    // first calculate the min range to not jump out of the matrix bounds
+    int maxWidth = startWidth + width > input.cols ? input.cols : startWidth + width ;
+    int maxHeight = startHeight + height > input.rows ? input.rows : startHeight + height ;
+    int imageChannels = input.channels();
+    float averageBrightness = 0;
+    unsigned char B, G, R, A;
+
+    for (int y = startHeight; y < maxHeight; y++) {
+        for (int x = startWidth; x < maxWidth; x++) {
+            // normal images
+            if (imageChannels == 3) {
+                cv::Vec3b pixel = input.at<cv::Vec3b>(y, x);
+
+                B = pixel[0];
+                G = pixel[1];
+                R = pixel[2];
+            }
+            // check for transparency layer, mainly pngs
+            else {
+                cv::Vec4b pixel = input.at<cv::Vec4b>(y, x);
+                B = pixel[0];
+                G = pixel[1];
+                R = pixel[2];
+                A = pixel[3];
+
+                // if the pixel is (almost) transparent then ignore it (assume max brighness)
+                if (A < 10) {
+                    averageBrightness += 255;
+                    continue;
+                }
+            }
+
+            float brightness = 0.299*R + 0.587*G + 0.114*B;
+            averageBrightness += brightness;
+        }
+    }
+
+    return averageBrightness / (width * height);
+}
+
 int main() {
-    std::string inputFile = "/home/mihai/CLionProjects/MAP-ascii-from-image/input/slide1.jpg";
+    std::string inputFile = "/home/mihai/CLionProjects/MAP-ascii-from-image/input/maxresdefault.jpg";
     std::string outputFile = "/home/mihai/CLionProjects/MAP-ascii-from-image/output/output.png";
     cv::Mat inputImage = cv::imread(inputFile, cv::IMREAD_UNCHANGED); // keeps alpha
     cv::Mat editedImage;
 
-    double scale = 0.5;
+    // consts atm, will be able to be edited with command line args
+    float ratio = inputImage.cols / inputImage.rows;
+    int width = 150, height = width * 0.25;
+    std::string charset = "@%#W$8B&M0QDRNHXAqmzpdbkhao*+=;:,.  ";
 
     if (inputImage.empty()) {
         std::cerr << "Failed to load image\n";
         return 1;
     }
 
-    // editedImage = convertToGrayscale(inputImage);
-    editedImage = resizeImage(inputImage, scale);
+    // TODO: add switches here for image filters
+    editedImage = inputImage;
 
-    cv::imwrite(outputFile, editedImage);
+    int stepX = (editedImage.cols) / width;
+    int stepY = (editedImage.rows) / height;
+    for (int row = 0; row < height; row++) {
+        for (int col = 0; col < width; col++) {
 
-    for (int y = 0; y < editedImage.rows; y++) {
-        for (int x = 0; x < editedImage.cols; x++) {
-            cv::Vec3b pixel = editedImage.at<cv::Vec3b>(y, x);
+            int startX = (col * editedImage.cols) / width;
+            int endX   = ((col + 1) * editedImage.cols) / width;
 
-            unsigned char B = pixel[0];
-            unsigned char G = pixel[1];
-            unsigned char R = pixel[2];
+            int startY = (row * editedImage.rows) / height;
+            int endY   = ((row + 1) * editedImage.rows) / height;
 
-            double brightness = 0.299*R + 0.587*G + 0.114*B;
+            float avg = computeAverageBrightness(editedImage, startX, startY, endX - startX, endY - startY);
 
-            std::cout << "Pixel (" << x << ", " << y << "): "
-                      << "R=" << (int)R << " "
-                      << "G=" << (int)G << " "
-                      << "B=" << (int)B;
-            std::cout << " Brightness: " << brightness << std::endl;
+            int idx = (avg / 255.0f) * (charset.size() - 1);
+            std::cout << charset[idx];
         }
+        std::cout << "\n";
     }
 
-    // std::cout << "Saved grayscale image witwh alpha to " << output_file << std::endl;
     return 0;
 }
