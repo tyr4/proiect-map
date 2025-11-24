@@ -1,7 +1,4 @@
-#include <iostream>
-#include <opencv2/opencv.hpp>
-
-#define CHAR_ASPECT 0.5f
+#include "ascii.hpp"
 
 cv::Mat convertToGrayscale(const cv::Mat &input) {
     cv::Mat final;
@@ -13,7 +10,7 @@ cv::Mat convertToGrayscale(const cv::Mat &input) {
 
         // convert to grayscale
         cv::Mat gray;
-        cv::cvtColor(input, gray, cv::COLOR_BGRA2GRAY);  // works directly!
+        cv::cvtColor(input, gray, cv::COLOR_BGRA2GRAY);
 
         // convert back to bgr, while keeping the transparency
         cv::merge(std::vector<cv::Mat>{gray, gray, gray, channels[3]}, final);
@@ -62,59 +59,37 @@ float computeAverageBrightness(const cv::Mat &input, int startWidth, int startHe
                 R = pixel[2];
                 A = pixel[3];
 
-                // if the pixel is (almost) transparent then ignore it (assume max brighness)
+                // if the pixel is (almost) transparent then ignore it (assume its white -> uses a low fill char)
                 if (A < 10) {
                     averageBrightness += 255;
                     continue;
                 }
             }
 
-            float brightness = 0.299*R + 0.587*G + 0.114*B;
-            averageBrightness += brightness;
+            // brightness formula
+            averageBrightness += 0.299*R + 0.587*G + 0.114*B;
         }
     }
 
     return averageBrightness / (width * height);
 }
 
-int main() {
-    std::string inputFile = "/home/mihai/CLionProjects/MAP-ascii-from-image/input/test.jpg";
-    std::string outputFile = "/home/mihai/CLionProjects/MAP-ascii-from-image/output/output.png";
-    cv::Mat inputImage = cv::imread(inputFile, cv::IMREAD_UNCHANGED); // keeps alpha
-    cv::Mat editedImage;
-
-    // consts atm, will be able to be edited with command line args
-    float aspect = 1.0 * inputImage.rows / inputImage.cols;
-    // makes sure the user defined width isnt higher than the actual width
-    int width = std::min(150, inputImage.cols);
-    int height = width * aspect * CHAR_ASPECT;
-    std::string charset = "@%#W$8B&M0QDRNHXAqmzpdbkhao*+=;:,.  ";
-
-    if (inputImage.empty()) {
-        std::cerr << "Failed to load image\n";
-        return 1;
-    }
-
-    // TODO: add switches here for image filters
-    editedImage = inputImage;
-
-    // iterates through the user defined width (and height which is calculated above)
+void printASCII(cv::Mat &input, std::string charset, int width, int height) {
+    // iterates through the user defined width (and height which is calculated based on the width)
     for (int row = 0; row < height; row++) {
         for (int col = 0; col < width; col++) {
 
-            int startX = (col * editedImage.cols) / width;
-            int endX = ((col + 1) * editedImage.cols) / width;
+            int startX = col * (input.cols / width);
+            int endX = (col + 1) * (input.cols / width);
 
-            int startY = (row * editedImage.rows) / height;
-            int endY = ((row + 1) * editedImage.rows) / height;
+            int startY = row * (input.rows / height);
+            int endY = (row + 1) * (input.rows / height);
 
-            float avg = computeAverageBrightness(editedImage, startX, startY, endX - startX, endY - startY);
+            float avg = computeAverageBrightness(input, startX, startY, endX - startX, endY - startY);
 
             int idx = (avg / 255.0f) * (charset.size() - 1);
             std::cout << charset[idx];
         }
         std::cout << "\n";
     }
-
-    return 0;
 }
