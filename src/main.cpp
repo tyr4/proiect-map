@@ -88,10 +88,11 @@ int main(int argc, char *argv[]) {
         if (!file.is_open()) {
             std::cerr << "Failed to open file " << output << std::endl;
         }
-
-        file << output;
-        std::cout << "Sent output to: " << outputFile << std::endl;
-        file.close();
+        else {
+            file << output;
+            std::cout << "Sent output to: " << outputFile << std::endl;
+            file.close();
+        }
     }
 
 
