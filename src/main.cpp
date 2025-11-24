@@ -23,7 +23,9 @@ int main(int argc, char *argv[]) {
         ("c,charset", "Set the charset to be used. They have to be entered in order of greatest -> lowest"
                                     "in terms of fill.", cxxopts::value<std::string>()->default_value("@%#W$8B&M0QDRNHXAqmzpdbkhao*+=;:,.  "))
         ("f,filter", "Set the filter to be applied before processing the image."
-                                   "Options: ", cxxopts::value<std::string>()->default_value(""))
+                                   " Options: Blur, Grayscale, Inverse, Contrast.", cxxopts::value<std::string>()->default_value(""))
+        ("a,amount", "Amount of blur/contrast for the filters.\nBlur amount: e.g. '5' blurs in a 5x5 "
+                     "neighbor grid\nContrast amount: e.g. >1 increases contrast and <1 decreases contrast", cxxopts::value<int>()->default_value("5"))
         ("l,color", "Enable ANSI color support.")
         ("h,help", "Prints this help command!");
 
@@ -44,6 +46,7 @@ int main(int argc, char *argv[]) {
     float aspect = 1.0f * inputImage.rows / inputImage.cols;
     int width = std::min(result["width"].as<int>(), inputImage.cols); // makes sure it doesnt go out of bounds
     int height = width * aspect * CHAR_ASPECT;
+    int amount = result["amount"].as<int>();
 
     if (inputImage.empty()) {
         std::cerr << "Failed to load image\n";
@@ -53,7 +56,19 @@ int main(int argc, char *argv[]) {
     // apply filters before processing the image
     switch (filterMap[filter]) {
         case GRAYSCALE:
-            editedImage = convertToGrayscale(inputImage);
+            editedImage = applyGrayscaleFilter(inputImage);
+            break;
+
+        case INVERSE:
+            editedImage = applyInverseFilter(inputImage);
+            break;
+
+        case BLUR:
+            editedImage = applyBlurFilter(inputImage, amount);
+            break;
+
+        case CONTRAST:
+            editedImage = applyContrastFilter(inputImage, amount);
             break;
 
         default:

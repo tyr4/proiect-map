@@ -2,7 +2,7 @@
 
 #define OUTPUT_PATH "/home/mihai/CLionProjects/MAP-ascii-from-image/output/output.png"
 
-cv::Mat convertToGrayscale(const cv::Mat &input) {
+cv::Mat applyGrayscaleFilter(const cv::Mat &input) {
     cv::Mat final;
 
     if (input.channels() == 4) {
@@ -23,6 +23,56 @@ cv::Mat convertToGrayscale(const cv::Mat &input) {
         // convert the grayscale back into bgr values
         cv::cvtColor(final, final, cv::COLOR_GRAY2BGR);
     }
+
+    // debugging purposes
+    if (cv::imwrite(OUTPUT_PATH, final)) {
+        std::cout << "Saved image to " << OUTPUT_PATH << std::endl;
+    }
+    else {
+        std::cout << "Failed to save image to " << OUTPUT_PATH << std::endl;
+    }
+
+    return final;
+}
+
+cv::Mat applyInverseFilter(const cv::Mat &input) {
+    cv::Mat final;
+
+    // inverts all bits on all channels
+    cv::bitwise_not(input, final);
+
+    // debugging purposes
+    if (cv::imwrite(OUTPUT_PATH, final)) {
+        std::cout << "Saved image to " << OUTPUT_PATH << std::endl;
+    }
+    else {
+        std::cout << "Failed to save image to " << OUTPUT_PATH << std::endl;
+    }
+
+    return final;
+}
+
+cv::Mat applyBlurFilter(const cv::Mat &input, int amount) {
+    cv::Mat final;
+
+    // replaces each pixel with the average of its neighbors in a 5x5 neighborhood
+    cv::blur(input, final, cv::Size(amount, amount));
+
+    // debugging purposes
+    if (cv::imwrite(OUTPUT_PATH, final)) {
+        std::cout << "Saved image to " << OUTPUT_PATH << std::endl;
+    }
+    else {
+        std::cout << "Failed to save image to " << OUTPUT_PATH << std::endl;
+    }
+
+    return final;
+}
+
+cv::Mat applyContrastFilter(const cv::Mat &input, int amount) {
+    cv::Mat final;
+
+    input.convertTo(final, -1, amount, 0);
 
     // debugging purposes
     if (cv::imwrite(OUTPUT_PATH, final)) {
