@@ -1,5 +1,7 @@
 #include "ascii.hpp"
 
+#define OUTPUT_PATH "/home/mihai/CLionProjects/MAP-ascii-from-image/output/output.png"
+
 cv::Mat convertToGrayscale(const cv::Mat &input) {
     cv::Mat final;
 
@@ -20,6 +22,14 @@ cv::Mat convertToGrayscale(const cv::Mat &input) {
         cv::cvtColor(input, final, cv::COLOR_BGR2GRAY);
         // convert the grayscale back into bgr values
         cv::cvtColor(final, final, cv::COLOR_GRAY2BGR);
+    }
+
+    // debugging purposes
+    if (cv::imwrite(OUTPUT_PATH, final)) {
+        std::cout << "Saved image to " << OUTPUT_PATH << std::endl;
+    }
+    else {
+        std::cout << "Failed to save image to " << OUTPUT_PATH << std::endl;
     }
 
     return final;
@@ -74,22 +84,31 @@ float computeAverageBrightness(const cv::Mat &input, int startWidth, int startHe
     return averageBrightness / (width * height);
 }
 
-void printASCII(cv::Mat &input, std::string charset, int width, int height) {
+std::string convertToASCII(cv::Mat &input, std::string charset, int width, int height) {
+    // this makes sure no portions of the image get cut off due to rounding
+    float blockW = static_cast<float>(input.cols) / width;
+    float blockH = static_cast<float>(input.rows) / height;
+    std::string buf;
+
     // iterates through the user defined width (and height which is calculated based on the width)
     for (int row = 0; row < height; row++) {
         for (int col = 0; col < width; col++) {
 
-            int startX = col * (input.cols / width);
-            int endX = (col + 1) * (input.cols / width);
+            // makes a rectangular selection of the entire pixel map that is
+            // blockW x blockH pixels, and maps a character to it
+            int startX = static_cast<int>(col * blockW);
+            int endX = static_cast<int>((col + 1) * blockW);
 
-            int startY = row * (input.rows / height);
-            int endY = (row + 1) * (input.rows / height);
+            int startY = static_cast<int>(row * blockH);
+            int endY = static_cast<int>((row + 1) * blockH);
 
             float avg = computeAverageBrightness(input, startX, startY, endX - startX, endY - startY);
 
             int idx = (avg / 255.0f) * (charset.size() - 1);
-            std::cout << charset[idx];
+            buf += charset[idx]; // output the char, low -> big index means big -> low screen fill (on the default charset)
         }
-        std::cout << "\n";
+        buf += "\n";
     }
+
+    return buf;
 }

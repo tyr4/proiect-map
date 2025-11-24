@@ -8,4 +8,4 @@
 cv::Mat convertToGrayscale(const cv::Mat&);
 cv::Mat resizeImage(cv::Mat&, float);
 float computeAverageBrightness(const cv::Mat&, int, int, int, int);
-void printASCII(cv::Mat&, std::string, int, int);
+std::string convertToASCII(cv::Mat&, std::string, int, int);
