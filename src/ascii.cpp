@@ -1,6 +1,52 @@
 #include "ascii.hpp"
+#include <unordered_map>
+#include <vector>
+#include <string>
 
 #define OUTPUT_PATH "/home/mihai/CLionProjects/MAP-ascii-from-image/output/output.png"
+
+const std::string RESET = "\x1b[0m";
+
+// banner text font thing
+std::unordered_map<char, std::vector<std::string>> asciiMap = {
+    {'A', { {" █████╗ "}, {"██╔══██╗"}, {"███████║"}, {"██╔══██║"}, {"██║  ██║"}, {"╚═╝  ╚═╝"} }},
+    {'B', { {"██████╗ "}, {"██╔══██╗"}, {"██████╔╝"}, {"██╔══██╗"}, {"██████╔╝"}, {"╚═════╝ "} }},
+    {'C', { {" ██████╗"}, {"██╔════╝"}, {"██║     "}, {"██║     "}, {"╚██████╗"}, {" ╚═════╝"} }},
+    {'D', { {"██████╗ "}, {"██╔══██╗"}, {"██║  ██║"}, {"██║  ██║"}, {"██████╔╝"}, {"╚═════╝ "} }},
+    {'E', { {"███████╗"}, {"██╔════╝"}, {"█████╗  "}, {"██╔══╝  "}, {"███████╗"}, {"╚══════╝"} }},
+    {'F', { {"███████╗"}, {"██╔════╝"}, {"█████╗  "}, {"██╔══╝  "}, {"██║     "}, {"╚═╝     "} }},
+    {'G', { {" ██████╗ "}, {"██╔════╝ "}, {"██║  ███╗"}, {"██║   ██║"}, {"╚██████╔╝"}, {" ╚═════╝ "} }},
+    {'H', { {"██╗  ██╗"}, {"██║  ██║"}, {"███████║"}, {"██╔══██║"}, {"██║  ██║"}, {"╚═╝  ╚═╝"} }},
+    {'I', { {"██╗"}, {"██║"}, {"██║"}, {"██║"}, {"██║"}, {"╚═╝"} }},
+    {'J', { {"     ██╗"}, {"     ██║"}, {"     ██║"}, {"██   ██║"}, {"╚█████╔╝"}, {" ╚════╝ "} }},
+    {'K', { {"██╗  ██╗"}, {"██║ ██╔╝"}, {"█████╔╝ "}, {"██╔═██╗ "}, {"██║  ██╗"}, {"╚═╝  ╚═╝"} }},
+    {'L', { {"██╗     "}, {"██║     "}, {"██║     "}, {"██║     "}, {"███████╗"}, {"╚══════╝"} }},
+    {'M', { {"███╗   ███╗"}, {"████╗ ████║"}, {"██╔████╔██║"}, {"██║╚██╔╝██║"}, {"██║ ╚═╝ ██║"}, {"╚═╝     ╚═╝"} }},
+    {'N', { {"███╗   ██╗"}, {"████╗  ██║"}, {"██╔██╗ ██║"}, {"██║╚██╗██║"}, {"██║ ╚████║"}, {"╚═╝  ╚═══╝"} }},
+    {'O', { {" ██████╗ "}, {"██╔═══██╗"}, {"██║   ██║"}, {"██║   ██║"}, {"╚██████╔╝"}, {" ╚═════╝ "} }},
+    {'P', { {"██████╗ "}, {"██╔══██╗"}, {"██████╔╝"}, {"██╔═══╝ "}, {"██║     "}, {"╚═╝     "} }},
+    {'Q', { {" ██████╗ "}, {"██╔═══██╗"}, {"██║   ██║"}, {"██║   ██║"}, {"╚██████╔╝"}, {" ╚════██╗"}, {"      ╚═╝"} }},
+    {'R', { {"██████╗ "}, {"██╔══██╗"}, {"██████╔╝"}, {"██╔══██╗"}, {"██║  ██║"}, {"╚═╝  ╚═╝"} }},
+    {'S', { {"███████╗"}, {"██╔════╝"}, {"███████╗"}, {"╚════██║"}, {"███████║"}, {"╚══════╝"} }},
+    {'T', { {"████████╗"}, {"╚══██╔══╝"}, {"   ██║   "}, {"   ██║   "}, {"   ██║   "}, {"   ╚═╝   "} }},
+    {'U', { {"██╗   ██╗"}, {"██║   ██║"}, {"██║   ██║"}, {"██║   ██║"}, {"╚██████╔╝"}, {" ╚═════╝ "} }},
+    {'V', { {"██╗   ██╗"}, {"██║   ██║"}, {"██║   ██║"}, {"╚██╗ ██╔╝"}, {" ╚████╔╝ "}, {"  ╚═══╝  "} }},
+    {'W', { {"██╗    ██╗"}, {"██║    ██║"}, {"██║ █╗ ██║"}, {"██║███╗██║"}, {"╚███╔███╔╝"}, {" ╚══╝╚══╝ "} }},
+    {'X', { {"██╗  ██╗"}, {"╚██╗██╔╝"}, {" ╚███╔╝ "}, {" ██╔██╗ "}, {"██╔╝ ██╗"}, {"╚═╝  ╚═╝"} }},
+    {'Y', { {"██╗   ██╗"}, {"╚██╗ ██╔╝"}, {" ╚████╔╝ "}, {"  ╚██╔╝  "}, {"   ██║   "}, {"   ╚═╝   "} }},
+    {'Z', { {"███████╗"}, {"╚══███╔╝"}, {"  ███╔╝ "}, {" ███╔╝  "}, {"███████╗"}, {"╚══════╝"} }}
+};
+
+std::string buildColorString(float R, float G, float B) {
+    // make sure the value is in the 0-255 range
+    int r = std::clamp(static_cast<int>(R), 0, 255);
+    int g = std::clamp(static_cast<int>(G), 0, 255);
+    int b = std::clamp(static_cast<int>(B), 0, 255);
+
+    std::ostringstream output;
+    output << "\x1b[38;2;" << r << ";" << g << ";" << b << "m";
+    return output.str();
+}
 
 cv::Mat applyGrayscaleFilter(const cv::Mat &input) {
     cv::Mat final;
@@ -93,6 +139,47 @@ cv::Mat resizeImage(cv::Mat &input, float factor) {
     return resized;
 }
 
+void computeAverageRGB(const cv::Mat &input, int startWidth, int startHeight, int width, int height, float &Rval, float &Gval, float &Bval) {
+    // first calculate the min range to not jump out of the matrix bounds
+    int maxWidth = startWidth + width > input.cols ? input.cols : startWidth + width ;
+    int maxHeight = startHeight + height > input.rows ? input.rows : startHeight + height ;
+    int imageChannels = input.channels();
+    unsigned char B, G, R, A;
+
+    Rval = Gval = Bval = 0;
+
+    for (int y = startHeight; y < maxHeight; y++) {
+        for (int x = startWidth; x < maxWidth; x++) {
+            // normal images
+            if (imageChannels == 3) {
+                cv::Vec3b pixel = input.at<cv::Vec3b>(y, x);
+
+                B = pixel[0];
+                G = pixel[1];
+                R = pixel[2];
+            }
+            // check for transparency layer, mainly pngs
+            else {
+                cv::Vec4b pixel = input.at<cv::Vec4b>(y, x);
+                B = pixel[0];
+                G = pixel[1];
+                R = pixel[2];
+                A = pixel[3];
+            }
+
+            Rval += R;
+            Gval += G;
+            Bval += B;
+        }
+    }
+
+    int count = (maxHeight - startHeight) * (maxWidth - startWidth);
+
+    Rval /= count;
+    Gval /= count;
+    Bval /= count;
+}
+
 float computeAverageBrightness(const cv::Mat &input, int startWidth, int startHeight, int width, int height) {
     // first calculate the min range to not jump out of the matrix bounds
     int maxWidth = startWidth + width > input.cols ? input.cols : startWidth + width ;
@@ -134,11 +221,13 @@ float computeAverageBrightness(const cv::Mat &input, int startWidth, int startHe
     return averageBrightness / (width * height);
 }
 
-std::string convertToASCII(cv::Mat &input, std::string charset, int width, int height) {
+std::string convertToASCII(cv::Mat &input, std::string charset, int width, int height, bool wantsColor) {
     // this makes sure no portions of the image get cut off due to rounding
     float blockW = static_cast<float>(input.cols) / width;
     float blockH = static_cast<float>(input.rows) / height;
+    float R, G, B;
     std::string buf;
+    std::string colorBuf;
 
     // iterates through the user defined width (and height which is calculated based on the width)
     for (int row = 0; row < height; row++) {
@@ -153,12 +242,36 @@ std::string convertToASCII(cv::Mat &input, std::string charset, int width, int h
             int endY = static_cast<int>((row + 1) * blockH);
 
             float avg = computeAverageBrightness(input, startX, startY, endX - startX, endY - startY);
-
             int idx = (avg / 255.0f) * (charset.size() - 1);
-            buf += charset[idx]; // output the char, low -> big index means big -> low screen fill (on the default charset)
+
+            if (wantsColor) {
+                // for the color output, the average RGB values per each block are needed
+                computeAverageRGB(input, startX, startY, endX - startX, endY - startY, R, G, B);
+                // ANSI color output
+                colorBuf += buildColorString(R, G, B);
+                colorBuf += charset[idx];
+                colorBuf += RESET;
+            }
+            else {
+                // standard character output
+                buf += charset[idx]; // output the char, low -> big index means big -> low screen fill (on the default charset)
+            }
         }
-        buf += "\n";
+        wantsColor? colorBuf += "\n" : buf += "\n";
     }
 
-    return buf;
+    return wantsColor ? colorBuf : buf;
+}
+
+std::string convertToBanner(std::string &input) {
+    std::string output;
+
+    for (int line = 0; line < 6; line++) {
+        for (char i : input) {
+            output += asciiMap[std::toupper(i)][line] + " ";
+        }
+        output += "\n";
+    }
+
+    return output;
 }

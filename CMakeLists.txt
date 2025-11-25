@@ -9,7 +9,8 @@ find_package(OpenCV REQUIRED core imgproc imgcodecs)
 
 add_executable(MAP_ascii_from_image src/main.cpp
         src/ascii.cpp
-        include/ascii.hpp)
+        include/ascii.hpp
+)
 
 target_link_libraries(MAP_ascii_from_image PRIVATE
         opencv_core
