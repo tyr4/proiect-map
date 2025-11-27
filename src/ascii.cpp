@@ -1,7 +1,7 @@
+#include <iostream>
 #include "ascii.hpp"
 #include <unordered_map>
 #include <vector>
-#include <string>
 
 #define OUTPUT_PATH "/home/mihai/CLionProjects/MAP-ascii-from-image/output/output.png"
 
@@ -37,14 +37,91 @@ std::unordered_map<char, std::vector<std::string>> asciiMap = {
     {'Z', { {"███████╗"}, {"╚══███╔╝"}, {"  ███╔╝ "}, {" ███╔╝  "}, {"███████╗"}, {"╚══════╝"} }}
 };
 
-std::string buildColorString(float R, float G, float B) {
+
+// map is for actually being able to use the switch with a string
+std::unordered_map<std::string, int> filterMap = {
+    {"blur", FILTERS::BLUR},
+    {"grayscale", FILTERS::GRAYSCALE},
+    {"inverse", FILTERS::INVERSE},
+    {"contrast", FILTERS::CONTRAST}
+};
+
+void applyFilter(cv::Mat &input, const std::string &filter, int amount) {
+    switch (filterMap[filter]) {
+        case GRAYSCALE:
+            input = applyGrayscaleFilter(input);
+            break;
+
+        case INVERSE:
+            input = applyInverseFilter(input);
+            break;
+
+        case BLUR:
+            input = applyBlurFilter(input, amount);
+            break;
+
+        case CONTRAST:
+            input = applyContrastFilter(input, amount);
+            break;
+
+        default:
+            break;
+    }
+}
+
+bool isVideo(const std::string &path) {
+    cv::VideoCapture cap(path);
+    cv::Mat frame1, frame2;
+
+    if (!cap.isOpened())
+        return false;
+
+    if (!cap.read(frame1))
+        return false; // cannot read the first frame -> not valid
+
+    if (!cap.read(frame2))
+        return false; // only one frame -> image
+
+    return true; // at least 2 frames -> video
+}
+
+bool isImage(const std::string &path) {
+    cv::Mat image = cv::imread(path);
+
+    return !image.empty();
+}
+
+// move cursor to top-left
+void resetCursor() {
+    std::cout << "\033[H" << std::flush;
+}
+
+// nice for animation
+void hideCursor() {
+    std::cout << "\033[?25l" << std::flush;
+}
+
+// show cursor again at exit
+void showCursor() {
+    std::cout << "\033[?25h" << std::flush;
+}
+
+// catch ctrl+c if the video animation is stopped
+// shows back the cursor and exits alternate terminal
+void controlCEvent(int sig) {
+    showCursor();
+    std::cout << "\033[?1049l";
+    exit(1);
+}
+
+std::string buildColorString(float R, float G, float B, char character) {
     // make sure the value is in the 0-255 range
     int r = std::clamp(static_cast<int>(R), 0, 255);
     int g = std::clamp(static_cast<int>(G), 0, 255);
     int b = std::clamp(static_cast<int>(B), 0, 255);
 
     std::ostringstream output;
-    output << "\x1b[38;2;" << r << ";" << g << ";" << b << "m";
+    output << "\x1b[38;2;" << r << ";" << g << ";" << b << "m" << character << RESET;
     return output.str();
 }
 
@@ -208,7 +285,7 @@ float computeAverageBrightness(const cv::Mat &input, int startWidth, int startHe
 
                 // if the pixel is (almost) transparent then ignore it (assume its white -> uses a low fill char)
                 if (A < 10) {
-                    averageBrightness += 255;
+                    // averageBrightness += 255;
                     continue;
                 }
             }
@@ -248,13 +325,11 @@ std::string convertToASCII(cv::Mat &input, std::string charset, int width, int h
                 // for the color output, the average RGB values per each block are needed
                 computeAverageRGB(input, startX, startY, endX - startX, endY - startY, R, G, B);
                 // ANSI color output
-                colorBuf += buildColorString(R, G, B);
-                colorBuf += charset[idx];
-                colorBuf += RESET;
+                colorBuf += buildColorString(R, G, B, charset[idx]);
             }
             else {
                 // standard character output
-                buf += charset[idx]; // output the char, low -> big index means big -> low screen fill (on the default charset)
+                buf += charset[idx]; // output the char, low -> big index means low -> big screen fill (on the default charset)
             }
         }
         wantsColor? colorBuf += "\n" : buf += "\n";

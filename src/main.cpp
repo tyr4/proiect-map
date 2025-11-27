@@ -1,28 +1,21 @@
+#include <iostream>
 #include "ascii.hpp"
 #include <cxxopts.hpp>
 #include <fstream>
-
-constexpr float CHAR_ASPECT = 0.5f;
-
-// enum is for easier switch handling
-enum FILTERS {BLUR = 1, GRAYSCALE, INVERSE, CONTRAST};
+#include <thread>
 
 int main(int argc, char *argv[]) {
-    // map is for actually being able to use the switch with a string
-    std::unordered_map<std::string, int> filterMap = {
-        {"blur", FILTERS::BLUR},
-        {"grayscale", FILTERS::GRAYSCALE},
-        {"inverse", FILTERS::INVERSE},
-        {"contrast", FILTERS::CONTRAST}
-    };
+    bool videoIs; // yoda style naming because the function stole the name
+    signal(SIGINT, controlCEvent); // see the ascii.cpp file for explanation
+
     cxxopts::Options options("MAP-ascii-from-image", "Convert images to ASCII");
     // add command line argument options
     options.add_options()
         ("i,input", "Input a path to the image.", cxxopts::value<std::string>())
         ("o,output", "Output to the specified path.", cxxopts::value<std::string>()->default_value(""))
         ("w,width", "Set the width in characters of the ASCII art.", cxxopts::value<int>()->default_value("120"))
-        ("c,charset", "Set the charset to be used. They have to be entered in order of greatest -> lowest"
-                                    "in terms of fill.", cxxopts::value<std::string>()->default_value("@%#W$8B&M0QDRNHXAqmzpdbkhao*+=;:,.  "))
+        ("c,charset", "Set the charset to be used. Recommended order is lowest to greatest"
+                                    "in terms of fill.", cxxopts::value<std::string>()->default_value("  .,;:=+*oahkbdpzmqAXHNRDQ0M&B8$W#%@"))
         ("f,filter", "Set the filter to be applied before processing the image."
                                    " Options: Blur, Grayscale, Inverse, Contrast.", cxxopts::value<std::string>()->default_value(""))
         ("a,amount", "Amount of blur/contrast for the filters.\nBlur amount: e.g. '5' blurs in a 5x5 "
@@ -34,67 +27,111 @@ int main(int argc, char *argv[]) {
     // first check if the first argument is a file path, no need for -i or --input
     options.parse_positional({"input"});
 
+    // parse the result of the arguments
     auto result = options.parse(argc, argv);
 
-    // if the help command is invoked or no args are passed, print it and exit
+    // if the help command is invoked / no args are passed, print help and exit
     if (result["help"].as<bool>() || argc == 1) {
         std::cout << options.help() << std::endl;
-        return 0;
+        return 1;
     }
 
     // assign the command line arguments to the variables
-    std::string inputFile;
+    std::string inputPath;
 
-    if (result.count("input")) {
-        inputFile = result["input"].as<std::string>();
-        std::cout << "Input file: " << inputFile << "\n";
-    }
-    else {
-        std::cerr << "No input file specified\n";
-        return 0;
-    }
+    inputPath = result["input"].as<std::string>();
+    std::cout << "Input file: " << inputPath << "\n";
 
     std::string outputFile = result["output"].as<std::string>();
     std::string charset = result["charset"].as<std::string>();
     std::string filter = result["filter"].as<std::string>();
-    cv::Mat inputImage = cv::imread(inputFile, cv::IMREAD_UNCHANGED), editedImage;
+    int amount = result["amount"].as<int>();
+    bool terminalOutput = result["terminal"].as<bool>();
+    bool wantsColor = result["color"].as<bool>();
 
+    // check if its a video or image
+    cv::Mat inputImage;
+    cv::VideoCapture video;
+
+    // first attempt to open as a video
+    videoIs = isVideo(inputPath);
+    if (videoIs) {
+        video = cv::VideoCapture(inputPath);
+
+        // assume the first frame as the input image for the following calcs
+        // it gets assigned in the function
+        if (!video.read(inputImage)) {
+            std::cerr << "Failed to read frame";
+            return 1;
+        }
+    }
+    else {
+        inputImage = cv::imread(inputPath);
+
+        if (inputImage.empty()) {
+            std::cerr << "Failed to load image\n";
+            return 1;
+        }
+    }
+
+    // calculate resolution stuff
     float aspect = 1.0f * inputImage.rows / inputImage.cols;
     int width = std::min(result["width"].as<int>(), inputImage.cols); // makes sure it doesnt go out of bounds
     int height = width * aspect * CHAR_ASPECT;
-    int amount = result["amount"].as<int>();
-    bool terminalOutput = result["terminal"].as<bool>();
 
-    if (inputImage.empty()) {
-        std::cerr << "Failed to load image\n";
-        return 1;
+    // process the video, no extra operations are needed after that
+    if (videoIs) {
+        // enter alternate terminal mode (rewrite the characters instead of clearing every time)
+        std::cout << "\033[?1049h";
+
+        double fps = video.get(cv::CAP_PROP_FPS);
+        double frameTime = 1.0 / fps;  // seconds per frame
+
+        hideCursor();  // looks cleaner
+
+        // frame loop, yes it skips the first frame
+        while (true) {
+            auto start = std::chrono::high_resolution_clock::now();
+
+            resetCursor();
+
+            cv::Mat frame;
+            if (!video.read(frame)) {
+                break; // end of file
+            }
+
+            // frame processing
+            // applyFilter(frame, filter, amount);
+
+            // the framerate would die if its processed with color, so its set to false
+            std::string output = convertToASCII(frame, charset, width, height, false);
+            std::cout << output;
+
+            // timing logic to respect the framerate, the output should generate faster than the framerate
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed = end - start;
+
+            double delay = frameTime - elapsed.count();
+            if (delay > 0) {
+                std::this_thread::sleep_for(std::chrono::duration<double>(delay));
+            }
+        }
+
+        // exit alternate terminal mode
+        std::cout << "\033[?1049l";
+
+        // cleanup
+        showCursor();
+        video.release();
+        return 0;
     }
 
+    // if no video, process the image
     // apply filters before processing the image
-    switch (filterMap[filter]) {
-        case GRAYSCALE:
-            editedImage = applyGrayscaleFilter(inputImage);
-            break;
-
-        case INVERSE:
-            editedImage = applyInverseFilter(inputImage);
-            break;
-
-        case BLUR:
-            editedImage = applyBlurFilter(inputImage, amount);
-            break;
-
-        case CONTRAST:
-            editedImage = applyContrastFilter(inputImage, amount);
-            break;
-
-        default:
-            editedImage = inputImage;
-            break;
-    }
+    applyFilter(inputImage, filter, amount);
 
     // actually process the image
-    std::string output = convertToASCII(editedImage, charset, width, height, result["color"].as<bool>());
+    std::string output = convertToASCII(inputImage, charset, width, height, wantsColor);
     if (terminalOutput) {
         std::cout << output;
     }
