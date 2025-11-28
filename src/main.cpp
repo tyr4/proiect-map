@@ -24,8 +24,8 @@ int main(int argc, char *argv[]) {
         ("t,terminal", "Enable terminal output.")
         ("h,help", "Prints this help command!");
 
-    // first check if the first argument is a file path, no need for -i or --input
-    options.parse_positional({"input"});
+    // // first check if the first argument is a file path, no need for -i or --input
+    // options.parse_positional({"input"});
 
     // parse the result of the arguments
     auto result = options.parse(argc, argv);
