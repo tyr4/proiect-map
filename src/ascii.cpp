@@ -147,14 +147,6 @@ cv::Mat applyGrayscaleFilter(const cv::Mat &input) {
         cv::cvtColor(final, final, cv::COLOR_GRAY2BGR);
     }
 
-    // debugging purposes
-    if (cv::imwrite(OUTPUT_PATH, final)) {
-        std::cout << "Saved image to " << OUTPUT_PATH << std::endl;
-    }
-    else {
-        std::cout << "Failed to save image to " << OUTPUT_PATH << std::endl;
-    }
-
     return final;
 }
 
@@ -163,14 +155,6 @@ cv::Mat applyInverseFilter(const cv::Mat &input) {
 
     // inverts all bits on all channels
     cv::bitwise_not(input, final);
-
-    // debugging purposes
-    if (cv::imwrite(OUTPUT_PATH, final)) {
-        std::cout << "Saved image to " << OUTPUT_PATH << std::endl;
-    }
-    else {
-        std::cout << "Failed to save image to " << OUTPUT_PATH << std::endl;
-    }
 
     return final;
 }
@@ -181,14 +165,6 @@ cv::Mat applyBlurFilter(const cv::Mat &input, int amount) {
     // replaces each pixel with the average of its neighbors in a 5x5 neighborhood
     cv::blur(input, final, cv::Size(amount, amount));
 
-    // debugging purposes
-    if (cv::imwrite(OUTPUT_PATH, final)) {
-        std::cout << "Saved image to " << OUTPUT_PATH << std::endl;
-    }
-    else {
-        std::cout << "Failed to save image to " << OUTPUT_PATH << std::endl;
-    }
-
     return final;
 }
 
@@ -196,14 +172,6 @@ cv::Mat applyContrastFilter(const cv::Mat &input, int amount) {
     cv::Mat final;
 
     input.convertTo(final, -1, amount, 0);
-
-    // debugging purposes
-    if (cv::imwrite(OUTPUT_PATH, final)) {
-        std::cout << "Saved image to " << OUTPUT_PATH << std::endl;
-    }
-    else {
-        std::cout << "Failed to save image to " << OUTPUT_PATH << std::endl;
-    }
 
     return final;
 }
@@ -336,6 +304,51 @@ std::string convertToASCII(cv::Mat &input, std::string charset, int width, int h
     }
 
     return wantsColor ? colorBuf : buf;
+}
+
+void playVideoASCII(cv::VideoCapture video, std::string charset, int width, int height) {
+    // enter alternate terminal mode (rewrite the characters instead of clearing every time)
+    std::cout << "\033[?1049h";
+
+    double fps = video.get(cv::CAP_PROP_FPS);
+    double frameTime = 1.0 / fps;  // seconds per frame
+
+    hideCursor();  // looks cleaner
+
+    // frame loop, yes it skips the first frame
+    while (true) {
+        auto start = std::chrono::high_resolution_clock::now();
+
+        resetCursor();
+
+        cv::Mat frame;
+        if (!video.read(frame)) {
+            break; // end of file
+        }
+
+        // frame processing
+        // applyFilter(frame, filter, amount);
+
+        // the framerate would die if its processed with color, so its set to false
+        std::string output = convertToASCII(frame, charset, width, height, false);
+        std::cout << output;
+
+        // timing logic to respect the framerate, the output should generate faster than the framerate
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+
+        double delay = frameTime - elapsed.count();
+        if (delay > 0) {
+            std::this_thread::sleep_for(std::chrono::duration<double>(delay));
+        }
+    }
+
+    // exit alternate terminal mode
+    std::cout << "\033[?1049l";
+
+    // cleanup
+    showCursor();
+    video.release();
 }
 
 std::string convertToBanner(std::string &input) {

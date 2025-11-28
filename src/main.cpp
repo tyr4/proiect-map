@@ -2,7 +2,23 @@
 #include "ascii.hpp"
 #include <cxxopts.hpp>
 #include <fstream>
-#include <thread>
+
+void tryPasteToFile(const std::string &output, const cxxopts::ParseResult &result) {
+    std::string outputFile = result["output"].as<std::string>();
+
+    if (!outputFile.empty()) {
+        std::ofstream file(outputFile);
+
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file " << output << std::endl;
+            return;
+        }
+
+        file << output;
+        std::cout << "Sent output to: " << outputFile << "\n" << std::endl;
+        file.close();
+    }
+}
 
 int main(int argc, char *argv[]) {
     bool videoIs; // yoda style naming because the function stole the name
@@ -20,7 +36,8 @@ int main(int argc, char *argv[]) {
                                    " Options: Blur, Grayscale, Inverse, Contrast.", cxxopts::value<std::string>()->default_value(""))
         ("a,amount", "Amount of blur/contrast for the filters.\nBlur amount: e.g. '5' blurs in a 5x5 "
                      "neighbor grid\nContrast amount: e.g. >1 increases contrast and <1 decreases contrast (turns it into pitch black)", cxxopts::value<int>()->default_value("5"))
-        ("l,color", "Enable ANSI color support.")
+        ("l,logo", "Converts the text input into logo art.", cxxopts::value<std::string>()->default_value(""))
+        ("r,color", "Enable ANSI color support.")
         ("t,terminal", "Enable terminal output.")
         ("h,help", "Prints this help command!");
 
@@ -36,11 +53,21 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // first check if the user wants logo art
+    std::string logo = result["logo"].as<std::string>();
+    if (logo != "") {
+        std::string output = convertToBanner(logo);
+        std::cout << output << std::endl;
+
+        tryPasteToFile(output, result);
+
+        return 0;
+    }
+
     // assign the command line arguments to the variables
     std::string inputPath;
 
     inputPath = result["input"].as<std::string>();
-    std::cout << "Input file: " << inputPath << "\n";
 
     std::string outputFile = result["output"].as<std::string>();
     std::string charset = result["charset"].as<std::string>();
@@ -81,48 +108,7 @@ int main(int argc, char *argv[]) {
 
     // process the video, no extra operations are needed after that
     if (videoIs) {
-        // enter alternate terminal mode (rewrite the characters instead of clearing every time)
-        std::cout << "\033[?1049h";
-
-        double fps = video.get(cv::CAP_PROP_FPS);
-        double frameTime = 1.0 / fps;  // seconds per frame
-
-        hideCursor();  // looks cleaner
-
-        // frame loop, yes it skips the first frame
-        while (true) {
-            auto start = std::chrono::high_resolution_clock::now();
-
-            resetCursor();
-
-            cv::Mat frame;
-            if (!video.read(frame)) {
-                break; // end of file
-            }
-
-            // frame processing
-            // applyFilter(frame, filter, amount);
-
-            // the framerate would die if its processed with color, so its set to false
-            std::string output = convertToASCII(frame, charset, width, height, false);
-            std::cout << output;
-
-            // timing logic to respect the framerate, the output should generate faster than the framerate
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> elapsed = end - start;
-
-            double delay = frameTime - elapsed.count();
-            if (delay > 0) {
-                std::this_thread::sleep_for(std::chrono::duration<double>(delay));
-            }
-        }
-
-        // exit alternate terminal mode
-        std::cout << "\033[?1049l";
-
-        // cleanup
-        showCursor();
-        video.release();
+        playVideoASCII(video, charset, width, height);
         return 0;
     }
 
@@ -137,18 +123,7 @@ int main(int argc, char *argv[]) {
     }
 
     // output to file if the user has specified one
-    if (!outputFile.empty()) {
-        std::ofstream file(outputFile);
-
-        if (!file.is_open()) {
-            std::cerr << "Failed to open file " << output << std::endl;
-        }
-        else {
-            file << output;
-            std::cout << "Sent output to: " << outputFile << std::endl;
-            file.close();
-        }
-    }
+    tryPasteToFile(output, result);
 
     return 0;
 }
