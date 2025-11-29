@@ -25,4 +25,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: yourdockerhubusername/yourimage:latest
+          tags: tyr4/ascii-art:latest
