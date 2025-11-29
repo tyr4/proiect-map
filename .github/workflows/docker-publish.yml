@@ -1,28 +1,16 @@
-name: Build and Push Docker Image
+- name: Check Docker secrets
+  run: |
+    if [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
+      echo "ERROR: Missing Docker secrets. Ensure DOCKERHUB_USERNAME and DOCKERHUB_TOKEN are set."
+      exit 1
+    fi
+  env:
+    DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+    DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
-on:
-  push:
-    branches: [ "main" ]   # or your default branch
-  workflow_dispatch:        # allows manual trigger
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: tyr4/ascii-art:latest
+- name: Log in to Docker Hub
+  uses: docker/login-action@v3
+  with:
+    registry: docker.io
+    username: ${{ secrets.DOCKERHUB_USERNAME || secrets.DOCKER_USERNAME }}
+    password: ${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKER_PASSWORD }}
