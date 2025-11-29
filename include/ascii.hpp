@@ -24,7 +24,7 @@ cv::Mat resizeImage(cv::Mat &input, float factor);
 float computeAverageBrightness(const cv::Mat &input, int startWidth, int startHeight, int width, int height);
 void computeAverageRGB(const cv::Mat &input, int startWidth, int startHeight, int width, int height, float &Rval, float &Gval, float &Bval);
 std::string convertToASCII(cv::Mat &input, std::string charset, int width, int height, bool wantsColor);
-void playVideoASCII(cv::VideoCapture video, std::string charset, int width, int height);
+void playVideoASCII(cv::VideoCapture video, std::string charset, int width, int height, std::string filter, int amount);
 std::string convertToBanner(std::string &input);
 
 void applyFilter(cv::Mat &input, const std::string &filter, int amount);

@@ -7,9 +7,9 @@ This is a C++ CLI program that uses CMake for builds and includes a Dockerfile f
 - `.github/workflows/` - Docker Build & Push Action to Dockerhub
 - `include/` - public headers
 - `input/` - sample test files, includes `.png`, `.jpg` and `.mp4` formats
+- `src/` - implementation source files
 - `CMakeLists.txt` - CMake configuration file for building the binary
 - `Dockerfile` - image to build/run the project in a container
-- `src/` - implementation source files
 
 ## Requirements
 - C++ compiler with C++20
@@ -29,7 +29,7 @@ cd proiect-map
 ```
 <br>
 
-Create and enter a build directory
+Create and enter a build directory:
 ```bash
 mkdir build
 cd build
@@ -71,10 +71,6 @@ Run the Docker image:
 docker run ascii-art:latest
 ```
 This will behave the same way as the `./MAP_ascii_from_image` command, as no arguments have been given.
-To pass a local folder to the Docker container, you can use:
-```bash
-docker run -v /home/user/my-images/:/input ascii-art:latest (rest of the arguments you may want)
-```
 
 ## Example commands
 When you run the program with no arguments, or the `--help` option, the following will print:
@@ -126,6 +122,126 @@ docker run -v /home/user/my-images/:/input ascii-art:latest -i /input/yourlocali
 ```
 The command above links the local `my-images/` directory to the `/input` container directory. That path becomes the path for your local directory inside the container. 
 
+## Example output
+All the input files can be found in the `input/` directory.
+
+Command:
+```bash
+./MAP_ascii_from_image -i ../input/upt.jpg -o ../output/output.txt -t -w 80
+```
+
+Output:
+```
+                                                                                
+                                                                                
+                                  +zAAp*                                        
+                                 .Q&BBBMH,                                      
+                                  pMBBBBMA                                      
+                                  :0BBBBBD,                                     
+                                  ;0BBBBBD.                                     
+                                  a0BBBB&q                                      
+                                 ;D&BBB&0mbpmAAAqpo,                            
+                                :R&BBBBBBBBBBBB&&&M0Nza,                        
+                              ,p0&BBBBB88888BBB&&&MMMM0Rk                       
+                     +qXAmzbkmQ&&BB8888888888B&&MQQQQQQDq                       
+                    aQMMMMMM&&BBB88888BB888BBB&&&M0QRNAa                        
+                   ,RM&&&&&&BBBBBBBBBBBBBBBBB&&&&MMM00QH*                       
+                   oQ&&&&&BBBBBBBBBBBBBBBB8BB&&&MQDDDQQRk                       
+                   =Q&&&&&&&&&&&&&&&&&BBBBBBB&&&M0DRNHz*                        
+                    XM&&&&&&&&&&&&&&&&&&&BBBB&&&MMM00QHa                        
+                    :RMMMMMMMMMMMMMM&&&&&BBBB&M0QQQQQDNo                        
+                     +NQQQQQQRRDQQ000MMM&&&&&&&&M0QDHb:                         
+                      .kHRHzh=;+hbpqXHRRD00M&&&&&&MM0QRNqzh=                    
+                         .                .:+hdmXDQ000QQQDDHa                   
+                                                   ,=ohdmmzk,                   
+                                                                                
+                                                                                
+
+```
+<br>
+Command:
+
+```bash
+./MAP_ascii_from_image -i ../input/slide1.jpg -o ../output/output.txt --filter contrast --amount 1 -t -c "@#$%dwnf:.  "
+```
+
+Output:
+```
+......::::::::::::::::::::::::::::ff::fffnnnnnnnnnnnnnnnnnnnnwwwwwwwwwwdddddddddddddddddddddddddddddddddddddddd%%%%%%%%%
+ ...:::::::::::::::::::::::::::::::::::ffnnnnffnnnnnnnnnnnnnnwwwwwwwddddddddddddddddddddddddddddddddddddddddddddddddd%%%
+    ......:::::::::::::::::::::.::::::fffffffffffnnnnnnnfffnnnwwwwwdddddddddddddddddddddddddddddddddddddddddddddddddddd%
+       ...:::::::::::::::::::::.::::fffffffffffffffffffffffnnnnwwwdddddddddddddddddddddddddddddddddddddddddddddddddddddd
+          .......:::::::::::::::.::fffffffffffffffffffffffnnnnwwdddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+                 ...:::::::::::::::::ffffffffffffffffffffnnnwwwddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+                  ....:::::::::::::::ffffffffffffffffffnnwwwwwwwwddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+                ...::::.::::::::::::::::::::ffffffffnnnwwwwwwwwddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+      ............:::::::::::::::::::::::::::fffnnnnwwwwwwwwwwwddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+...............::::::::::::::::::::::::::::ffnnnnwwwwwwwwwwwwwwwwwddddddddddddddddddddddddddddddddddddddddddddddwwwwwwww
+..............::..:::::::::::::::::::::ffffnnnnnnnnnnnnnnnfnfnwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+..........::::nd:.......:::::fffffffffffnnnnnnnnnnnnnnnnnn:nfnnnwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwnfnnnnnnnnn
+........::::::nwwn:......:::fffffffffnnnnnnnnnnnnnnnnnnnnnndwdnnnnnnnnnnnnwwwwwwwwwwwwwwwwwwwwnnnnnnnnnnnnnnnnwnnnffffff
+.......:::::::wdwdwwf:.::::ffffffffffffffffffffffffnnnnnnnnwwdnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnfndnff::::::
+....:nndw:::fwwwwwwd%wnffffffffffffffffffffffffffffffffffnnddwnfffffffffnnnnnnnnnnnnnfffffff::::::ffndnffffffndn::::::::
+.::::nfwnnnwwdnwnwnw%%dndnfffffffffffffffffffffffffffffffffndffffffffffffffffffffffff::::.........::fnf::::::nwwf.......
+:fnwwdd%%%ddwwwwdwwwwddd%%wnwwwnnwnfffnnnffff::::::::::::ffnwfffffffffffff:::::::::................:d%d:.....nwn:.....:f
+%dddwwnnnfnn:dwwdwww%%%ddddw$$$dwdw%dwwwwwwwwnnnnf:::::::::nwfffffffff:::::ff::.............:.....::fffn:...ff::f...:fff
+fnnnfffffndw:d%%%%dw%dd%dwdwwwwwwdwd%%%$$w$$%nwwwwwnfffffnwnw:::::::::::::::::fwf:........:nwn:::::::ffnf:::.f%.f:ffffnn
+fndnfnnnfffnnwwdd%dw$$#$%%%wwd%wwdwwwdnwnwwddwwwd%%w$%nnnn%fndwnnf::....:f.:ff.n.f::::ff::nd%wf:::fffnnwwwnnffwnwwwwwwww
+nnnwfnnnwwnwnwdd%dwn%%d%dwwdd$$$ddd%%%nwnwnnnfwnnnwwnwnwwwnfw$%%dd%nd:::::::::..fnff::::ffw%%$df:ffnnnnwd%$$$df:fwwdwwdw
+nnnwddw%wfnwwddwwwdd$#$$$%%%d%$dw%wd$%nwndwwwfnnnnnnnnw#%wnfw%##%%d:::::....:....ff:ff::nfnd$$$wnffnnnnwd%$###%nf::nnnf:
+ddddw%dw%ddn$#$#$$$$###$###$%$#$%%%$$$nwnwnwnnwwnwwwwwd#wwnww%$#ddd:f::f:n::n:.n:fn.:n.:wnw$##$n..:::ffnw%$###%%w:.fnf:.
+%wwwnwnwnfnn$###$##%$$$$$$$%d%%$$$%#%%wwwdwdwnw%wwnwwwd$nddddd%$%%df:.:f.:.:n::f.f:.::.:nnw$##wn:ffff:ffn%$#@#w%w::f:::f
+wwddwdwwdwdn%#$#$#%%##$$#$$%dd%%###$%$dddwddddddddwdddd$nwnnfnnnnw%:f:ff..:d$dnn:ff::f.:wnd$#%wf.:::: :nn%##$%%$dnwwddnw
+%d##%%%d$%$nd###$#$%$##$$$$%%%%dd%%d%dwdwdwwwwd$wwwdwdw%:nwwwwwwnnn::::n:ff%#%fw:fn.fn.:%d%$###d.::..f:wnwd$$$$%n::ndwf:
+dd%%wd%wddd%%%%%%$ddd%%%%%%%%%dd%%%%%%%%%%dddddddwdwwwn:.fwdddddwwwfnnnwwwwwwnfnffnfffffnnwnffnf:fnnnwf%ww%ddwnnnnfnwnnn
+wwwwdwdddddwwnnff:::::fnwdddddddddddddddddddddwwnf::fnnnnnnnnnnfnwdddddddwddddddddddddddddddddwdwwwwwwnnnnwnnnnnnnnnnnnn
+nnnnnnnnff:::::::::::::::::::::fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+............:::::::::fnwwwwddddddddddddddwwwdddwwwwwwwwwwwwwwwwwwwddddwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwddddwwwwwwwwwwwww
+.................::::fwwddddd%ddd%%%%ddddd%%%%%%%%%d%%%%%%%ddddddddddddddddddddddd%%ddddd%%dddddddd%%%dddddddddddddddddd
+..................::::nwd%%%ddd%dd%%%%%%ddd%%%%%%%%%%%%%%d%%%%%%dddddd%%dddd%%dddd%%%%%%%%%%%%dddddddddddddddddddddddddd
+.......:..:.:..::::::::nwwdd%%dddddddddddddddddd%ddddddd%d%%%%ddd%ddd%%%%%%%%%%%%%%%%%%%%%%%%%%%%%ddddd%d%%ddddddddddd%d
+.:...::::.:::::::.:::::fnwwd%%%%ddddddddddddddd%%%%%%%ddd%%%%ddd%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%dddddddd%%%%%%%dddddddddd
+:.:::::::::::::::::::::ffnwd%%%%%ddddddddddddddddd%ddddddd%%%%%%%%%%%%%%%d%%%%dd%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%dd%%%%%%%
+.:::::::::::::::::::::::fnwwd%%%%d%%%%%%dddd%ddddddddd%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%ddddddd%
+:::::::::::::::::::::::::fw%d%%%%%%%%%%%%%%%%dddd%%%%%%%%%%%%%%%dd%%%%%%%%dd%%%%%%%%%%%%%%%%%%%%%%%d%%%%%%%%%%%%%%dddd%%
+::::::::::.::::::::::::::ffndd%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%d%ddd%%%
+:::::::::::::::::::::::::::nnww%$%$%%%%%%%%%d%%%%ddd%d%%%%%%$%$$$%%%%%%%%%%%%%%%%%%%%%%%%%%%%d%%%d%%%%%%%%%%%%%%%%%%%%%%
+:::.:::::::::::::::::::::::fnnnwwdd%%%%%%ddddd%ddddd%%%%%%$$$$$$%$$%%%%%%%%$$%%%%%%%%%%%%%%%%%ddd%%%ddd%%%d%%ddddd%dddd%
+Sent output to: ../output/output.txt
+```
+<br>
+Command:
+
+```bash
+./MAP_ascii_from_image -i ../input/slide1.jpg -t --color
+```
+
+Output:
+
+![who reads fthis](/assets/result1.png)
+
+<br>
+Command:
+
+```bash
+./MAP_ascii_from_image -i ../input/upt.jpg -t -w 150 --color
+```
+
+Output:
+
+![who reads fthis](/assets/result2.png)
+
+<br>
+Command:
+
+```bash
+./MAP_ascii_from_image -i ../input/BadApple.mp4
+```
+
+Output:
+
+![insert alt text](/assets/badapple.gif)
+
 ## Other stuff
 If, for some reason, you want cool banner text, you can also do:
 ```bash
@@ -140,6 +256,7 @@ The command above will give the following terminal output:
 ╚██████╗ ╚██████╔╝ ╚██████╔╝ ███████╗    ██║    ███████╗ ██╔╝ ██╗    ██║    
  ╚═════╝  ╚═════╝   ╚═════╝  ╚══════╝    ╚═╝    ╚══════╝ ╚═╝  ╚═╝    ╚═╝  
 ```
+
 
 ## Troubleshooting
 - If CMake reports a missing dependency, install the required system packages (compiler, libraries)

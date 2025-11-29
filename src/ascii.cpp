@@ -3,8 +3,6 @@
 #include <unordered_map>
 #include <vector>
 
-#define OUTPUT_PATH "/home/mihai/CLionProjects/MAP-ascii-from-image/output/output.png"
-
 const std::string RESET = "\x1b[0m";
 
 // banner text font thing
@@ -306,7 +304,7 @@ std::string convertToASCII(cv::Mat &input, std::string charset, int width, int h
     return wantsColor ? colorBuf : buf;
 }
 
-void playVideoASCII(cv::VideoCapture video, std::string charset, int width, int height) {
+void playVideoASCII(cv::VideoCapture video, std::string charset, int width, int height, std::string filter, int amount) {
     // enter alternate terminal mode (rewrite the characters instead of clearing every time)
     std::cout << "\033[?1049h";
 
@@ -327,7 +325,7 @@ void playVideoASCII(cv::VideoCapture video, std::string charset, int width, int 
         }
 
         // frame processing
-        // applyFilter(frame, filter, amount);
+        applyFilter(frame, filter, amount);
 
         // the framerate would die if its processed with color, so its set to false
         std::string output = convertToASCII(frame, charset, width, height, false);

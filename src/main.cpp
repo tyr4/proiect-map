@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
 
     // process the video, no extra operations are needed after that
     if (videoIs) {
-        playVideoASCII(video, charset, width, height);
+        playVideoASCII(video, charset, width, height, filter, amount);
         return 0;
     }
 
