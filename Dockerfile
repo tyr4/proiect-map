@@ -7,6 +7,7 @@ RUN dnf -y install opencv-devel ninja-build cmake gcc-c++ ccache cxxopts-devel
 WORKDIR /app
 
 COPY include/ ./include
+COPY input/ ./input
 COPY src/ ./src
 COPY CMakeLists.txt .
 

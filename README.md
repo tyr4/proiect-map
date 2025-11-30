@@ -68,7 +68,7 @@ This will take a while, it's about 1.5GB (99% is just the image processing libra
 
 Run the Docker image:
 ```bash
-docker run ascii-art:latest
+docker run tyr4/ascii-art:latest
 ```
 This will behave the same way as the `./MAP_ascii_from_image` command, as no arguments have been given.
 
@@ -118,7 +118,7 @@ If you feel like typing a lot and building a mega command, here's an example usi
 ### Docker
 The only different thing here is mounting a local input folder to the container. The rest of the parameters can be used as normal.
 ```bash
-docker run -v /home/user/my-images/:/input ascii-art:latest -i /input/yourlocalimage.png (rest of the stuff)
+docker run -v /home/user/my-images/:/input tyr4/ascii-art:latest -i /input/yourlocalimage.png (rest of the stuff)
 ```
 The command above links the local `my-images/` directory to the `/input` container directory. That path becomes the path for your local directory inside the container. 
 
@@ -127,7 +127,7 @@ All the input files can be found in the `input/` directory.
 
 Command:
 ```bash
-./MAP_ascii_from_image -i ../input/upt.jpg -o ../output/output.txt -t -w 80
+./MAP_ascii_from_image -i ../input/callme.jpg -o ../output/output.txt -t -w 80
 ```
 
 Output:
