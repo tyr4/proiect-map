@@ -262,3 +262,9 @@ The command above will give the following terminal output:
 - If CMake reports a missing dependency, install the required system packages (compiler, libraries)
 - For build errors, re-run CMake from a clean `build/` directory
 - If Docker builds fail, check the Dockerfile and build context
+
+## References
+- [OpenCV documentation](https://docs.opencv.org/)
+- [cxxopts documentation](https://github.com/jarro2783/cxxopts)
+- Various [StackOverflow](https://stackoverflow.com/) answers
+- [ChatGPT](https://chatgpt.com) (mainly for syntax)
